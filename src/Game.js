@@ -258,5 +258,133 @@ export class Game {
       winner: this.winner
     };
   }
+
+  getPossibleMoves(row, col) {
+    const piece = this.board.getPiece(row, col);
+    if (!piece || piece.color !== this.currentPlayer) {
+      return [];
+    }
+
+    const possibleMoves = [];
+
+    // For pieces that move in lines (rook, bishop, queen), check all directions
+    if (piece.type === 'rook' || piece.type === 'queen') {
+      // Horizontal and vertical directions
+      const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+      for (const [rowDir, colDir] of directions) {
+        for (let i = 1; i < 8; i++) {
+          const newRow = row + rowDir * i;
+          const newCol = col + colDir * i;
+          if (!this.board.isValidPosition(newRow, newCol)) break;
+          
+          const validation = this.isValidMove(row, col, newRow, newCol);
+          if (validation.valid) {
+            possibleMoves.push([newRow, newCol]);
+            const targetPiece = this.board.getPiece(newRow, newCol);
+            if (targetPiece) break; // Can't move further after capturing
+          } else {
+            break; // Path is blocked
+          }
+        }
+      }
+    }
+
+    if (piece.type === 'bishop' || piece.type === 'queen') {
+      // Diagonal directions
+      const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+      for (const [rowDir, colDir] of directions) {
+        for (let i = 1; i < 8; i++) {
+          const newRow = row + rowDir * i;
+          const newCol = col + colDir * i;
+          if (!this.board.isValidPosition(newRow, newCol)) break;
+          
+          const validation = this.isValidMove(row, col, newRow, newCol);
+          if (validation.valid) {
+            possibleMoves.push([newRow, newCol]);
+            const targetPiece = this.board.getPiece(newRow, newCol);
+            if (targetPiece) break; // Can't move further after capturing
+          } else {
+            break; // Path is blocked
+          }
+        }
+      }
+    }
+
+    // For knight, check all 8 possible L-shaped moves
+    if (piece.type === 'knight') {
+      const knightMoves = [
+        [2, 1], [2, -1], [-2, 1], [-2, -1],
+        [1, 2], [1, -2], [-1, 2], [-1, -2]
+      ];
+      for (const [rowOffset, colOffset] of knightMoves) {
+        const newRow = row + rowOffset;
+        const newCol = col + colOffset;
+        if (this.board.isValidPosition(newRow, newCol)) {
+          const validation = this.isValidMove(row, col, newRow, newCol);
+          if (validation.valid) {
+            possibleMoves.push([newRow, newCol]);
+          }
+        }
+      }
+    }
+
+    // For king, check all 8 adjacent squares
+    if (piece.type === 'king') {
+      const kingMoves = [
+        [1, 0], [-1, 0], [0, 1], [0, -1],
+        [1, 1], [1, -1], [-1, 1], [-1, -1]
+      ];
+      for (const [rowOffset, colOffset] of kingMoves) {
+        const newRow = row + rowOffset;
+        const newCol = col + colOffset;
+        if (this.board.isValidPosition(newRow, newCol)) {
+          const validation = this.isValidMove(row, col, newRow, newCol);
+          if (validation.valid) {
+            possibleMoves.push([newRow, newCol]);
+          }
+        }
+      }
+    }
+
+    // For pawn, check forward moves and captures
+    if (piece.type === 'pawn') {
+      const direction = piece.color === 'white' ? -1 : 1;
+      const startRow = piece.color === 'white' ? 6 : 1;
+
+      // Forward one square
+      const forwardRow = row + direction;
+      if (this.board.isValidPosition(forwardRow, col)) {
+        const validation = this.isValidMove(row, col, forwardRow, col);
+        if (validation.valid) {
+          possibleMoves.push([forwardRow, col]);
+        }
+      }
+
+      // Forward two squares (from starting position)
+      if (row === startRow) {
+        const forwardTwoRow = row + 2 * direction;
+        if (this.board.isValidPosition(forwardTwoRow, col)) {
+          const validation = this.isValidMove(row, col, forwardTwoRow, col);
+          if (validation.valid) {
+            possibleMoves.push([forwardTwoRow, col]);
+          }
+        }
+      }
+
+      // Diagonal captures
+      for (const colOffset of [-1, 1]) {
+        const captureRow = row + direction;
+        const captureCol = col + colOffset;
+        if (this.board.isValidPosition(captureRow, captureCol)) {
+          const validation = this.isValidMove(row, col, captureRow, captureCol);
+          if (validation.valid) {
+            possibleMoves.push([captureRow, captureCol]);
+          }
+        }
+      }
+    }
+
+    return possibleMoves;
+  }
 }
 

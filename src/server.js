@@ -72,6 +72,24 @@ app.post('/api/game/:gameId/reset', (req, res) => {
   res.json({ state: newGame.getState() });
 });
 
+// Get possible moves for a square
+app.get('/api/game/:gameId/possible-moves', (req, res) => {
+  const { gameId } = req.params;
+  const { row, col } = req.query;
+  
+  const game = games.get(gameId);
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+  
+  if (row === undefined || col === undefined) {
+    return res.status(400).json({ error: 'Row and col parameters are required' });
+  }
+  
+  const possibleMoves = game.getPossibleMoves(parseInt(row), parseInt(col));
+  res.json({ possibleMoves });
+});
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, '../public/index.html'));

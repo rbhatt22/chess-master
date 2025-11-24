@@ -1,6 +1,7 @@
 let gameId = null;
 let selectedSquare = null;
 let boardState = null;
+let possibleMoves = [];
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
@@ -61,10 +62,24 @@ function renderBoard() {
             board.appendChild(square);
         }
     }
+
+    // Restore selection and highlights if they exist
+    if (selectedSquare) {
+        const [row, col] = selectedSquare;
+        const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (square) {
+            square.classList.add('selected');
+        }
+        // Only highlight if checkbox is checked
+        const showMovesCheckbox = document.getElementById('showMovesCheckbox');
+        if (showMovesCheckbox && showMovesCheckbox.checked) {
+            highlightPossibleMoves();
+        }
+    }
 }
 
 // Handle square click
-function handleSquareClick(row, col) {
+async function handleSquareClick(row, col) {
     const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
     const piece = boardState.board[row][col];
 
@@ -78,18 +93,54 @@ function handleSquareClick(row, col) {
             return;
         }
 
-        // Try to make move
-        const fromSquare = `${files[selectedCol]}${ranks[selectedRow]}`;
-        const toSquare = `${files[col]}${ranks[row]}`;
-        makeMove(`${fromSquare} ${toSquare}`);
-        clearSelection();
+        // Check if this is a valid move
+        const isValidMove = possibleMoves.some(([r, c]) => r === row && c === col);
+        if (isValidMove) {
+            // Try to make move
+            const fromSquare = `${files[selectedCol]}${ranks[selectedRow]}`;
+            const toSquare = `${files[col]}${ranks[row]}`;
+            await makeMove(`${fromSquare} ${toSquare}`);
+            clearSelection();
+        } else {
+            // If clicking on another piece of the same color, select that instead
+            if (piece && piece.color === boardState.currentPlayer) {
+                clearSelection();
+                await selectSquare(row, col);
+            } else {
+                clearSelection();
+            }
+        }
         return;
     }
 
     // Select square if it has a piece of current player's color
     if (piece && piece.color === boardState.currentPlayer) {
-        selectedSquare = [row, col];
+        await selectSquare(row, col);
+    }
+}
+
+// Select square and show possible moves
+async function selectSquare(row, col) {
+    selectedSquare = [row, col];
+    const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    if (square) {
         square.classList.add('selected');
+    }
+
+    // Always fetch possible moves for validation, but only show them if checkbox is checked
+    try {
+        const response = await fetch(`/api/game/${gameId}/possible-moves?row=${row}&col=${col}`);
+        const data = await response.json();
+        possibleMoves = data.possibleMoves || [];
+        
+        // Only highlight if checkbox is checked
+        const showMovesCheckbox = document.getElementById('showMovesCheckbox');
+        if (showMovesCheckbox && showMovesCheckbox.checked) {
+            highlightPossibleMoves();
+        }
+    } catch (error) {
+        console.error('Failed to fetch possible moves:', error);
+        possibleMoves = [];
     }
 }
 
@@ -103,6 +154,32 @@ function clearSelection() {
         }
         selectedSquare = null;
     }
+    possibleMoves = [];
+    clearPossibleMovesHighlight();
+}
+
+// Highlight possible moves
+function highlightPossibleMoves() {
+    possibleMoves.forEach(([row, col]) => {
+        const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (square) {
+            const piece = boardState.board[row][col];
+            if (piece) {
+                // Square has an enemy piece - highlight as capturable
+                square.classList.add('capturable');
+            } else {
+                // Empty square - highlight as possible move
+                square.classList.add('possible-move');
+            }
+        }
+    });
+}
+
+// Clear possible moves highlight
+function clearPossibleMovesHighlight() {
+    document.querySelectorAll('.possible-move, .capturable').forEach(square => {
+        square.classList.remove('possible-move', 'capturable');
+    });
 }
 
 // Make a move
@@ -125,6 +202,7 @@ async function makeMove(move) {
         
         if (data.success) {
             boardState = data.state;
+            clearSelection();
             renderBoard();
             updateUI();
             showMessage(data.message, 'success');
@@ -217,6 +295,21 @@ document.getElementById('newGameBtn').addEventListener('click', () => {
 document.getElementById('resetBtn').addEventListener('click', () => {
     if (confirm('Are you sure you want to reset the game?')) {
         resetGame();
+    }
+});
+
+// Checkbox event listener for showing possible moves
+document.getElementById('showMovesCheckbox').addEventListener('change', (e) => {
+    if (!e.target.checked) {
+        // If unchecked, clear any existing highlights
+        clearPossibleMovesHighlight();
+        possibleMoves = [];
+    } else {
+        // If checked and a piece is selected, show moves
+        if (selectedSquare) {
+            const [row, col] = selectedSquare;
+            selectSquare(row, col);
+        }
     }
 });
 
