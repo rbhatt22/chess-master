@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♔ Chess Master ♔</h1>
+            <div class="game-info">
+                <div class="current-player">
+                    <span class="label">Current Player:</span>
+                    <span id="currentPlayer" class="player white">White</span>
+                </div>
+                <div class="game-status" id="gameStatus"></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="board-container">
+                <div id="chessBoard" class="chess-board"></div>
+            </div>
+
+            <div class="controls">
+                <div class="move-input-section">
+                    <h3>Make a Move</h3>
+                    <div class="input-group">
+                        <input type="text" id="moveInput" placeholder="e.g., e2 e4" maxlength="10">
+                        <button id="makeMoveBtn">Move</button>
+                    </div>
+                    <div class="message" id="message"></div>
+                </div>
+
+                <div class="actions">
+                    <button id="newGameBtn" class="btn-primary">New Game</button>
+                    <button id="resetBtn" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
