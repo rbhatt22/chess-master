@@ -6,6 +6,9 @@ export class Game {
     this.currentPlayer = 'white';
     this.gameOver = false;
     this.winner = null;
+    this.moves = [];
+    this.capturedWhite = [];
+    this.capturedBlack = [];
   }
 
   getCurrentPlayer() {
@@ -229,6 +232,30 @@ export class Game {
     // Check for check (simplified - we'll enhance this later)
     const capturedPiece = this.board.getPiece(toRow, toCol);
     this.board.movePiece(fromRow, fromCol, toRow, toCol);
+
+    // Track captured piece
+    if (capturedPiece) {
+      if (capturedPiece.color === 'white') {
+        this.capturedWhite.push({
+          type: capturedPiece.type,
+          symbol: capturedPiece.getSymbol(),
+          char: capturedPiece.getChar()
+        });
+      } else {
+        this.capturedBlack.push({
+          type: capturedPiece.type,
+          symbol: capturedPiece.getSymbol(),
+          char: capturedPiece.getChar()
+        });
+      }
+    }
+
+    this.recordMove({
+      player: this.currentPlayer,
+      from: move.from,
+      to: move.to,
+      captured: capturedPiece ? capturedPiece.type : null
+    });
     
     // Check for checkmate (simplified - we'll enhance this later)
     if (capturedPiece && capturedPiece.type === 'king') {
@@ -255,8 +282,23 @@ export class Game {
       board: this.board.toJSON(),
       currentPlayer: this.currentPlayer,
       gameOver: this.gameOver,
-      winner: this.winner
+      winner: this.winner,
+      moves: this.moves,
+      capturedWhite: this.capturedWhite,
+      capturedBlack: this.capturedBlack
     };
+  }
+
+  recordMove(move) {
+    const moveNumber = Math.floor(this.moves.length / 2) + 1;
+    this.moves.push({
+      number: moveNumber,
+      player: move.player,
+      from: move.from,
+      to: move.to,
+      notation: `${move.from} -> ${move.to}`,
+      captured: move.captured
+    });
   }
 
   getPossibleMoves(row, col) {

@@ -23,11 +23,83 @@ body {
     width: 100%;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.mode-selection-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    text-align: center;
+}
+
+.mode-card h1 {
+    font-size: 3em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.mode-subtitle {
+    color: #555;
+    font-size: 1.2em;
+    margin-bottom: 30px;
+}
+
+.mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.landing-message {
+    min-height: 24px;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.btn-outline {
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px dashed #999;
+    background: transparent;
+    color: #555;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-outline:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.btn-large {
+    padding: 18px;
+    font-size: 1.1em;
+}
+
 header {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
     border-bottom: 2px solid #e0e0e0;
+    position: relative;
 }
 
 header h1 {
@@ -43,6 +115,30 @@ header h1 {
     align-items: center;
     gap: 30px;
     flex-wrap: wrap;
+}
+
+.btn-ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 10px 16px;
+    border: 2px solid transparent;
+    background: transparent;
+    color: #667eea;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-ghost:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.btn-ghost:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
 }
 
 .current-player {
@@ -98,9 +194,60 @@ main {
 
 .board-container {
     flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.captured-pieces {
+    width: 480px;
+    min-height: 50px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.captured-label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.captured-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+    min-height: 30px;
+}
+
+.captured-piece {
+    font-size: 1.8em;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    cursor: help;
+}
+
+.captured-piece:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.captured-white {
+    order: 3;
+}
+
+.captured-black {
+    order: 1;
 }
 
 .chess-board {
+    order: 2;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
@@ -329,6 +476,86 @@ main {
     transform: scale(0.98);
 }
 
+.btn-tertiary {
+    padding: 8px 14px;
+    border: 2px solid #667eea;
+    background: transparent;
+    color: #667eea;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-tertiary:hover {
+    background: #667eea;
+    color: #fff;
+}
+
+.history-section {
+    margin-top: 25px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.history-panel {
+    max-height: 240px;
+    overflow-y: auto;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.move-list {
+    list-style: decimal;
+    margin-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.move-list li {
+    display: grid;
+    grid-template-columns: 30px 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.95em;
+}
+
+.move-number {
+    font-weight: 700;
+    color: #555;
+}
+
+.move-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.move-entry.white {
+    color: #333;
+}
+
+.move-entry.black {
+    color: #111;
+}
+
+.empty-history {
+    font-size: 0.9em;
+    color: #777;
+    list-style: none;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 20px;
@@ -336,6 +563,15 @@ main {
 
     header h1 {
         font-size: 2em;
+    }
+
+    .board-container {
+        width: 100%;
+    }
+
+    .captured-pieces {
+        width: 100%;
+        max-width: 400px;
     }
 
     .chess-board {
@@ -347,6 +583,10 @@ main {
 
     .square {
         font-size: 2.5em;
+    }
+
+    .captured-piece {
+        font-size: 1.5em;
     }
 
     main {

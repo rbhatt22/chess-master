@@ -3,8 +3,89 @@ let selectedSquare = null;
 let boardState = null;
 let possibleMoves = [];
 
+const modeSelectionScreen = document.getElementById('modeSelection');
+const gameContainer = document.getElementById('gameContainer');
+const singlePlayerBtn = document.getElementById('singlePlayerBtn');
+const twoPlayerBtn = document.getElementById('twoPlayerBtn');
+const landingMessage = document.getElementById('landingMessage');
+const backToMenuBtn = document.getElementById('backToMenuBtn');
+const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+const historyPanel = document.getElementById('historyPanel');
+const moveList = document.getElementById('moveList');
+
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+let historyVisible = false;
+
+function setLandingMessage(text) {
+    if (landingMessage) {
+        landingMessage.textContent = text;
+    }
+}
+
+function clearLandingMessage() {
+    setLandingMessage('');
+}
+
+function setHistoryVisible(visible) {
+    historyVisible = visible;
+    if (historyPanel) {
+        historyPanel.classList.toggle('hidden', !visible);
+    }
+    if (toggleHistoryBtn) {
+        toggleHistoryBtn.textContent = visible ? 'Hide Moves' : 'View Moves';
+    }
+}
+
+function updateMoveHistory() {
+    if (!moveList) return;
+    moveList.innerHTML = '';
+
+    // Ensure moves array exists
+    if (!boardState) {
+        boardState = { moves: [] };
+    }
+    if (!boardState.moves) {
+        boardState.moves = [];
+    }
+
+    if (!Array.isArray(boardState.moves) || boardState.moves.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'empty-history';
+        emptyItem.textContent = 'No moves yet.';
+        moveList.appendChild(emptyItem);
+        return;
+    }
+
+    const groupedMoves = [];
+    boardState.moves.forEach((move) => {
+        const index = move.number - 1;
+        if (!groupedMoves[index]) {
+            groupedMoves[index] = { number: move.number, white: null, black: null };
+        }
+        groupedMoves[index][move.player] = move.notation;
+    });
+
+    groupedMoves.forEach((group) => {
+        const li = document.createElement('li');
+        const moveNumber = document.createElement('span');
+        moveNumber.className = 'move-number';
+        moveNumber.textContent = `${group.number}.`;
+
+        const whiteMove = document.createElement('span');
+        whiteMove.className = 'move-entry white';
+        whiteMove.textContent = group.white || '—';
+
+        const blackMove = document.createElement('span');
+        blackMove.className = 'move-entry black';
+        blackMove.textContent = group.black || '—';
+
+        li.appendChild(moveNumber);
+        li.appendChild(whiteMove);
+        li.appendChild(blackMove);
+        moveList.appendChild(li);
+    });
+}
 
 // Initialize game
 async function initGame() {
@@ -13,6 +94,17 @@ async function initGame() {
         const data = await response.json();
         gameId = data.gameId;
         boardState = data.state;
+        // Ensure moves array exists
+        if (!boardState.moves) {
+            boardState.moves = [];
+        }
+        // Ensure captured pieces arrays exist
+        if (!boardState.capturedWhite) {
+            boardState.capturedWhite = [];
+        }
+        if (!boardState.capturedBlack) {
+            boardState.capturedBlack = [];
+        }
         renderBoard();
         updateUI();
     } catch (error) {
@@ -20,6 +112,9 @@ async function initGame() {
         console.error(error);
     }
 }
+
+setHistoryVisible(false);
+updateMoveHistory();
 
 // Render the chess board
 function renderBoard() {
@@ -201,10 +296,21 @@ async function makeMove(move) {
         const data = await response.json();
         
         if (data.success) {
-            boardState = data.state;
-            clearSelection();
-            renderBoard();
-            updateUI();
+        boardState = data.state;
+        // Ensure moves array exists
+        if (!boardState.moves) {
+            boardState.moves = [];
+        }
+        // Ensure captured pieces arrays exist
+        if (!boardState.capturedWhite) {
+            boardState.capturedWhite = [];
+        }
+        if (!boardState.capturedBlack) {
+            boardState.capturedBlack = [];
+        }
+        clearSelection();
+        renderBoard();
+        updateUI();
             showMessage(data.message, 'success');
         } else {
             showMessage(data.message, 'error');
@@ -217,7 +323,10 @@ async function makeMove(move) {
 
 // Update UI elements
 function updateUI() {
-    if (!boardState) return;
+    if (!boardState) {
+        updateMoveHistory();
+        return;
+    }
 
     const currentPlayerEl = document.getElementById('currentPlayer');
     const gameStatusEl = document.getElementById('gameStatus');
@@ -231,6 +340,45 @@ function updateUI() {
     } else {
         gameStatusEl.textContent = '';
         gameStatusEl.className = 'game-status';
+    }
+
+    updateMoveHistory();
+    updateCapturedPieces();
+}
+
+// Update captured pieces display
+function updateCapturedPieces() {
+    const capturedWhiteEl = document.getElementById('capturedWhite');
+    const capturedBlackEl = document.getElementById('capturedBlack');
+    
+    if (!capturedWhiteEl || !capturedBlackEl || !boardState) {
+        return;
+    }
+
+    // Clear existing content
+    capturedWhiteEl.innerHTML = '';
+    capturedBlackEl.innerHTML = '';
+
+    // Display captured white pieces
+    if (boardState.capturedWhite && Array.isArray(boardState.capturedWhite)) {
+        boardState.capturedWhite.forEach(piece => {
+            const pieceEl = document.createElement('span');
+            pieceEl.className = 'captured-piece';
+            pieceEl.textContent = piece.symbol;
+            pieceEl.title = piece.type.charAt(0).toUpperCase() + piece.type.slice(1);
+            capturedWhiteEl.appendChild(pieceEl);
+        });
+    }
+
+    // Display captured black pieces
+    if (boardState.capturedBlack && Array.isArray(boardState.capturedBlack)) {
+        boardState.capturedBlack.forEach(piece => {
+            const pieceEl = document.createElement('span');
+            pieceEl.className = 'captured-piece';
+            pieceEl.textContent = piece.symbol;
+            pieceEl.title = piece.type.charAt(0).toUpperCase() + piece.type.slice(1);
+            capturedBlackEl.appendChild(pieceEl);
+        });
     }
 }
 
@@ -256,6 +404,17 @@ async function resetGame() {
         const response = await fetch(`/api/game/${gameId}/reset`, { method: 'POST' });
         const data = await response.json();
         boardState = data.state;
+        // Ensure moves array exists
+        if (!boardState.moves) {
+            boardState.moves = [];
+        }
+        // Ensure captured pieces arrays exist
+        if (!boardState.capturedWhite) {
+            boardState.capturedWhite = [];
+        }
+        if (!boardState.capturedBlack) {
+            boardState.capturedBlack = [];
+        }
         renderBoard();
         updateUI();
         clearSelection();
@@ -313,6 +472,69 @@ document.getElementById('showMovesCheckbox').addEventListener('change', (e) => {
     }
 });
 
-// Initialize on load
-initGame();
+if (toggleHistoryBtn) {
+    toggleHistoryBtn.addEventListener('click', () => {
+        setHistoryVisible(!historyVisible);
+        if (historyVisible) {
+            updateMoveHistory();
+        }
+    });
+}
+
+if (twoPlayerBtn) {
+    twoPlayerBtn.addEventListener('click', async () => {
+        clearLandingMessage();
+        if (modeSelectionScreen) {
+            modeSelectionScreen.classList.add('hidden');
+        }
+        if (gameContainer) {
+            gameContainer.classList.remove('hidden');
+        }
+
+        if (!gameId) {
+            await initGame();
+        } else {
+            renderBoard();
+            updateUI();
+        }
+    });
+}
+
+if (singlePlayerBtn) {
+    singlePlayerBtn.addEventListener('click', () => {
+        setLandingMessage('Single-player mode is under development. Stay tuned!');
+    });
+}
+
+if (backToMenuBtn) {
+    backToMenuBtn.addEventListener('click', () => {
+        clearSelection();
+        clearPossibleMovesHighlight();
+        possibleMoves = [];
+        boardState = null;
+        gameId = null;
+
+        const board = document.getElementById('chessBoard');
+        if (board) {
+            board.innerHTML = '';
+        }
+
+        const messageEl = document.getElementById('message');
+        if (messageEl) {
+            messageEl.textContent = '';
+            messageEl.className = 'message';
+        }
+
+        if (gameContainer) {
+            gameContainer.classList.add('hidden');
+        }
+        if (modeSelectionScreen) {
+            modeSelectionScreen.classList.remove('hidden');
+        }
+
+        setLandingMessage('Choose a mode to start playing again.');
+        setHistoryVisible(false);
+        updateMoveHistory();
+    });
+}
 

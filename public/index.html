@@ -7,9 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div id="modeSelection" class="mode-selection-screen">
+        <div class="mode-card">
+            <h1>♔ Chess Master ♔</h1>
+            <p class="mode-subtitle">Choose how you want to play</p>
+            <div class="mode-buttons">
+                <button id="singlePlayerBtn" class="btn-outline">Single Player (Coming Soon)</button>
+                <button id="twoPlayerBtn" class="btn-primary btn-large">Two Players</button>
+            </div>
+            <p id="landingMessage" class="landing-message"></p>
+        </div>
+    </div>
+
+    <div class="container hidden" id="gameContainer">
         <header>
             <h1>♔ Chess Master ♔</h1>
+            <button id="backToMenuBtn" class="btn-ghost" title="Back to menu">← Main Menu</button>
             <div class="game-info">
                 <div class="current-player">
                     <span class="label">Current Player:</span>
@@ -21,7 +34,15 @@
 
         <main>
             <div class="board-container">
+                <div class="captured-pieces captured-black">
+                    <div class="captured-label">Captured (Black)</div>
+                    <div id="capturedBlack" class="captured-list"></div>
+                </div>
                 <div id="chessBoard" class="chess-board"></div>
+                <div class="captured-pieces captured-white">
+                    <div class="captured-label">Captured (White)</div>
+                    <div id="capturedWhite" class="captured-list"></div>
+                </div>
             </div>
 
             <div class="controls">
@@ -43,6 +64,16 @@
                 <div class="actions">
                     <button id="newGameBtn" class="btn-primary">New Game</button>
                     <button id="resetBtn" class="btn-secondary">Reset</button>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-header">
+                        <h3>Moves</h3>
+                        <button id="toggleHistoryBtn" class="btn-tertiary">View Moves</button>
+                    </div>
+                    <div id="historyPanel" class="history-panel hidden">
+                        <ol id="moveList" class="move-list"></ol>
+                    </div>
                 </div>
             </div>
         </main>
