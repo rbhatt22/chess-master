@@ -3,6 +3,9 @@ Chess learning game
 
 A chess game built with Node.js.
 
+<img width="1268" height="758" alt="image" src="https://github.com/user-attachments/assets/6240bc19-dbe3-4c97-888a-44170010ea2e" />
+
+
 ## Features
 
 - ✅ Basic chess board with all pieces
